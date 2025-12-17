@@ -13,13 +13,11 @@ function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch Users
         const userRes = await axios.get('http://localhost:5000/api/users')
         if (userRes.data && userRes.data.data) {
           setUsers(userRes.data.data)
         }
 
-        // Fetch Server Status Message (Requirement: "GET endpoint that returns a simple message")
         const msgRes = await axios.get('http://localhost:5000/')
         setServerMessage(msgRes.data)
 
@@ -39,7 +37,6 @@ function App() {
         setUsers([...users, response.data.data])
         setSuccessMessage(`✅ ${newUser.name} has been added successfully!`)
 
-        // Auto-dismiss the success message after 3 seconds
         setTimeout(() => {
           setSuccessMessage('')
         }, 3000)
@@ -101,11 +98,11 @@ function App() {
         )}
       </main>
 
-      <footer style={{ marginTop: '3rem', textAlign: 'center', opacity: 0.7 }}>
-        <p style={{ fontSize: '0.9rem', marginBottom: '0.5rem', color: '#2563eb' }}>
+      <footer>
+        <p className="server-status">
           Server Status: {serverMessage || 'Checking...'}
         </p>
-        <small>&copy; {new Date().getFullYear()} @. All rights reserved.</small>
+        <small>&copy; {new Date().getFullYear()} Framboxx IT. All rights reserved.</small>
       </footer>
     </div>
   )
