@@ -13,7 +13,6 @@ exports.createUser = async (req, res) => {
     try {
         const { name, role, mobile, email } = req.body;
 
-        // Log the POST request received (Day 2 Task Requirement)
         console.log('\n========== POST REQUEST RECEIVED ==========');
         console.log(`Timestamp: ${new Date().toLocaleString()}`);
         console.log('Request Body:', JSON.stringify(req.body, null, 2));
@@ -37,18 +36,38 @@ exports.createUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
     try {
         const { name, role, mobile, email } = req.body;
+        const userId = req.params.id;
+
+        console.log('\n========== PUT REQUEST RECEIVED ==========');
+        console.log(`Timestamp: ${new Date().toLocaleString()}`);
+        console.log(`Target User ID: ${userId}`);
+        console.log('Update Data:', JSON.stringify(req.body, null, 2));
+
+        const updateData = {};
+        if (name) updateData.name = name;
+        if (role) updateData.role = role;
+        if (mobile) updateData.mobile = mobile;
+        if (email) updateData.email = email;
+
         const updatedUser = await User.findByIdAndUpdate(
-            req.params.id,
-            { name, role, mobile, email },
-            { new: true }
+            userId,
+            updateData,
+            { new: true, runValidators: true }
         );
 
         if (!updatedUser) {
+            console.log('❌ User not found with ID:', userId);
+            console.log('===========================================\n');
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
+        console.log('✅ User updated successfully:', updatedUser.name);
+        console.log('===========================================\n');
+
         res.json({ success: true, message: 'User updated successfully', data: updatedUser });
     } catch (error) {
+        console.error('❌ Error updating user:', error.message);
+        console.log('===========================================\n');
         res.status(500).json({ success: false, message: error.message });
     }
 };

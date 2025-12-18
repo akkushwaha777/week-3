@@ -3,12 +3,15 @@ import axios from 'axios'
 import Header from './components/Header'
 import UserCard from './components/UserCard'
 import AddUserForm from './components/AddUserForm'
+import Toast from './components/Toast'
+import Modal from './components/Modal'
 
 function App() {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [serverMessage, setServerMessage] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
+  const [toast, setToast] = useState(null)
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, userId: null })
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,15 +38,11 @@ function App() {
       const response = await axios.post('http://localhost:5000/api/users', newUser)
       if (response.data && response.data.data) {
         setUsers([...users, response.data.data])
-        setSuccessMessage(`✅ ${newUser.name} has been added successfully!`)
-
-        setTimeout(() => {
-          setSuccessMessage('')
-        }, 3000)
+        setToast({ message: `${newUser.name} added successfully!`, type: 'success' })
       }
     } catch (error) {
       console.error('Error adding user:', error)
-      alert('Failed to add user')
+      setToast({ message: 'Failed to add user', type: 'error' })
     }
   }
 
@@ -51,35 +50,58 @@ function App() {
     try {
       await axios.put(`http://localhost:5000/api/users/${id}`, updatedData)
       setUsers(users.map(user => (user._id === id ? { ...user, ...updatedData } : user)))
+      setToast({ message: 'User updated successfully!', type: 'success' })
     } catch (error) {
       console.error('Error updating user:', error)
-      alert('Failed to update user')
+      setToast({ message: 'Failed to update user', type: 'error' })
     }
   }
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
-      try {
-        await axios.delete(`http://localhost:5000/api/users/${id}`)
-        setUsers(users.filter(user => user._id !== id))
-      } catch (error) {
-        console.error('Error deleting user:', error)
-        alert(`Failed to delete user: ${error.response ? error.response.statusText : error.message}`)
-      }
+  const handleDeleteClick = (id) => {
+    setDeleteModal({ isOpen: true, userId: id })
+  }
+
+  const handleConfirmDelete = async () => {
+    const id = deleteModal.userId
+    try {
+      await axios.delete(`http://localhost:5000/api/users/${id}`)
+      setUsers(users.filter(user => user._id !== id))
+      setToast({ message: 'User deleted successfully!', type: 'success' })
+    } catch (error) {
+      console.error('Error deleting user:', error)
+      setToast({ message: 'Failed to delete user', type: 'error' })
+    } finally {
+      setDeleteModal({ isOpen: false, userId: null })
     }
+  }
+
+  const handleCancelDelete = () => {
+    setDeleteModal({ isOpen: false, userId: null })
   }
 
   return (
     <div className="container">
       <Header />
 
-      {successMessage && (
-        <div className="success-message">
-          {successMessage}
-        </div>
-      )}
+      <div className="toast-container">
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
+      </div>
 
       <AddUserForm onAdd={handleAddUser} />
+
+      <Modal
+        isOpen={deleteModal.isOpen}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this user? This action cannot be undone."
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
 
       <main>
         {loading ? (
@@ -91,7 +113,7 @@ function App() {
                 key={user._id}
                 user={user}
                 onUpdate={handleUpdate}
-                onDelete={handleDelete}
+                onDelete={handleDeleteClick}
               />
             ))}
           </div>
