@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 
 const UserCard = ({ user, onUpdate, onDelete }) => {
     const [isEditing, setIsEditing] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
     const [formData, setFormData] = useState({
         name: user.name,
         role: user.role,
@@ -13,9 +14,14 @@ const UserCard = ({ user, onUpdate, onDelete }) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSave = () => {
-        onUpdate(user._id, formData);
-        setIsEditing(false);
+    const handleSave = async () => {
+        setIsUpdating(true);
+        try {
+            await onUpdate(user._id, formData);
+            setIsEditing(false);
+        } finally {
+            setIsUpdating(false);
+        }
     };
 
     const handleCancel = () => {
@@ -66,10 +72,10 @@ const UserCard = ({ user, onUpdate, onDelete }) => {
                             className="edit-input"
                         />
                         <div className="button-group">
-                            <button className="btn btn-update" onClick={handleSave}>
-                                Update
+                            <button className="btn btn-update" onClick={handleSave} disabled={isUpdating}>
+                                {isUpdating ? 'Updating...' : 'Update'}
                             </button>
-                            <button className="btn btn-cancel" onClick={handleCancel}>
+                            <button className="btn btn-cancel" onClick={handleCancel} disabled={isUpdating}>
                                 Cancel
                             </button>
                         </div>

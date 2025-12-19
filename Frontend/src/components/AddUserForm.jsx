@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 const AddUserForm = ({ onAdd }) => {
     const [formData, setFormData] = useState({ name: '', role: '', mobile: '', email: '' });
     const [errors, setErrors] = useState({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const validate = () => {
         const newErrors = {};
@@ -11,7 +12,7 @@ const AddUserForm = ({ onAdd }) => {
         return newErrors;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         const newErrors = validate();
         if (Object.keys(newErrors).length > 0) {
@@ -19,9 +20,14 @@ const AddUserForm = ({ onAdd }) => {
             return;
         }
 
-        onAdd(formData);
-        setFormData({ name: '', role: '', mobile: '', email: '' });
-        setErrors({});
+        setIsSubmitting(true);
+        try {
+            await onAdd(formData);
+            setFormData({ name: '', role: '', mobile: '', email: '' });
+            setErrors({});
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleChange = (e) => {
@@ -77,7 +83,9 @@ const AddUserForm = ({ onAdd }) => {
                         className="add-input"
                     />
                 </div>
-                <button type="submit" className="btn btn-add">Add Member</button>
+                <button type="submit" className="btn btn-add" disabled={isSubmitting}>
+                    {isSubmitting ? 'Adding...' : 'Add Member'}
+                </button>
             </form>
         </div>
     );
